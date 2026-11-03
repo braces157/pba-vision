@@ -55,17 +55,41 @@ VOD, 21 minutes at 4 fps, CPU only:
 | stage | result |
 | --- | --- |
 | frames read | 5 022 (21 min @ 4 fps, CPU only, no GPU) |
-| full-table view / quad locked / all three balls | 3 374 / 2 378 / 2 183 |
-| rest states → strokes | 142 → **88** |
-| caroms | **23 detected vs 20 official** (+15%; official 22 points include four 2-point shots) |
+| camera survey | 28 views found, **1 stable (tripod) camera** owning 2 249 of 2 378 table frames |
+| frames measured / all three balls | 1 830 on the locked camera |
+| rest states → strokes | 132 → **81** |
+| caroms | **15 detected vs 20 official** |
 | official result | 6 innings, Cenet 7 — Saygıner 15 |
 | rest-position repeatability | ~5 mm median across consecutive frames |
 
-Inning-level chaining is the one part that does **not** validate yet: rest
-positions cannot tell a real miss from a camera cut reliably, and per-stroke
-cue-ball identity stays ambiguous at 4 fps. Estimated innings (41) vs official
-(6) is reported honestly in the artifact. Fixing this needs 60 fps burst
-sampling around motion bursts or score-bug OCR — it is the top roadmap item.
+## The camera lock (v0.2)
+
+A broadcast cuts constantly, and a cut is poison for position streams: the
+same resting balls map a few centimetres apart on two different cameras, so
+chaining rests across cuts *manufactures* movement — the v0.1 run overcounted
+caroms (23 vs 20 official) exactly this way. The fix exploits a physical fact:
+the scoring view is a **fixed tripod**, so its cloth quad is constant all
+session. The survey pass clusters every plausible quad; the dominant cluster
+is the tripod (here: 28 views found, one owning 95% of table time). Measurement
+then accepts only frames on a stable camera, and strokes never span views.
+
+The trade-off is measured, not hidden: shots that happen while only a *roaming*
+camera is live have no stable quad, so they are skipped — hence 15 detected
+caroms against 20 official. In exchange every position comes from one
+calibrated view, and the phantom-carom bias disappears. Accepting roaming
+cameras with per-frame homography is on the roadmap.
+
+## Known, quantified gaps
+
+Deliberate, not bugs — the validation output reports them per run:
+
+- a carom that hits both object balls but completes fewer than three cushions
+  scores nothing on the table, yet three moving balls imply one point;
+- the terminal's 2-point shots are one carom each but two points on the sheet;
+- shots covered only by roaming cameras are skipped (see the camera lock);
+- per-stroke cue-ball identity is inferred and chaining is unreliable at 4 fps:
+  estimated innings (42) vs official (6) is reported honestly in the artifact.
+  Fixing it needs 60 fps burst sampling or score-bug OCR — the top roadmap item.
 
 ![reconstructed ball positions](docs/images/scatter.png)
 
@@ -107,6 +131,7 @@ src/pbavision/
   ingest.py      media feed, yt-dlp download, ffmpeg frame extraction
   vision/
     detect.py    HSV ball detection + full-table gate
+    camera.py    stable-camera discovery and the per-camera lock
     table.py     cloth quad, homography to table meters
   align/
     terminal.py  scoring-terminal client (TLS intermediate pinned, referer set)

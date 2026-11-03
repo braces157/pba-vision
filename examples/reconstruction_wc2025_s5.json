@@ -16,11 +16,13 @@
  },
  "stats": {
   "frames_seen": 5022,
-  "frames_full_table": 3374,
-  "frames_quad_locked": 2378,
-  "frames_all_balls": 2183,
-  "rest_states": 142,
-  "strokes": 88
+  "camera_views": 28,
+  "stable_cameras": 1,
+  "main_camera_frames": 2249,
+  "frames_measured": 1830,
+  "frames_all_balls": 0,
+  "rest_states": 132,
+  "strokes": 81
  },
  "strokes": [
   {
@@ -295,7 +297,47 @@
    "inning_est": 1
   },
   {
-   "index": 16,
+   "index": 13,
+   "t": 98.25,
+   "from": {
+    "white": [
+     1.856,
+     1.092
+    ],
+    "yellow": [
+     1.371,
+     0.845
+    ],
+    "red": [
+     1.804,
+     0.546
+    ]
+   },
+   "to": {
+    "white": [
+     2.278,
+     0.104
+    ],
+    "yellow": [
+     1.48,
+     0.909
+    ],
+    "red": [
+     2.948,
+     1.072
+    ]
+   },
+   "moved": [
+    "white",
+    "yellow",
+    "red"
+   ],
+   "points_est": 1,
+   "cue_est": "white",
+   "inning_est": 1
+  },
+  {
+   "index": 14,
    "t": 153.75,
    "from": {
     "white": [
@@ -333,7 +375,7 @@
    "inning_est": 1
   },
   {
-   "index": 17,
+   "index": 15,
    "t": 157.0,
    "from": {
     "white": [
@@ -371,7 +413,7 @@
    "inning_est": 1
   },
   {
-   "index": 18,
+   "index": 16,
    "t": 157.5,
    "from": {
     "white": [
@@ -411,7 +453,7 @@
    "inning_est": 1
   },
   {
-   "index": 20,
+   "index": 18,
    "t": 165.5,
    "from": {
     "white": [
@@ -449,7 +491,7 @@
    "inning_est": 1
   },
   {
-   "index": 21,
+   "index": 19,
    "t": 184.5,
    "from": {
     "white": [
@@ -487,7 +529,7 @@
    "inning_est": 1
   },
   {
-   "index": 22,
+   "index": 20,
    "t": 186.0,
    "from": {
     "white": [
@@ -526,7 +568,7 @@
    "inning_est": 8
   },
   {
-   "index": 24,
+   "index": 22,
    "t": 202.0,
    "from": {
     "white": [
@@ -564,7 +606,7 @@
    "inning_est": 2
   },
   {
-   "index": 25,
+   "index": 23,
    "t": 222.75,
    "from": {
     "white": [
@@ -602,7 +644,7 @@
    "inning_est": 2
   },
   {
-   "index": 26,
+   "index": 24,
    "t": 223.5,
    "from": {
     "white": [
@@ -641,7 +683,7 @@
    "inning_est": 10
   },
   {
-   "index": 29,
+   "index": 27,
    "t": 262.75,
    "from": {
     "white": [
@@ -679,7 +721,7 @@
    "inning_est": 0
   },
   {
-   "index": 32,
+   "index": 30,
    "t": 279.75,
    "from": {
     "white": [
@@ -717,7 +759,7 @@
    "inning_est": 3
   },
   {
-   "index": 33,
+   "index": 31,
    "t": 301.0,
    "from": {
     "white": [
@@ -755,7 +797,7 @@
    "inning_est": 3
   },
   {
-   "index": 34,
+   "index": 32,
    "t": 302.5,
    "from": {
     "white": [
@@ -794,7 +836,7 @@
    "inning_est": 3
   },
   {
-   "index": 35,
+   "index": 33,
    "t": 336.25,
    "from": {
     "white": [
@@ -832,7 +874,7 @@
    "inning_est": 3
   },
   {
-   "index": 36,
+   "index": 34,
    "t": 337.0,
    "from": {
     "white": [
@@ -871,7 +913,7 @@
    "inning_est": 14
   },
   {
-   "index": 37,
+   "index": 35,
    "t": 349.5,
    "from": {
     "white": [
@@ -889,46 +931,6 @@
    },
    "to": {
     "white": [
-     2.317,
-     0.163
-    ],
-    "yellow": [
-     2.481,
-     -0.191
-    ],
-    "red": [
-     -0.134,
-     0.08
-    ]
-   },
-   "moved": [
-    "white",
-    "yellow",
-    "red"
-   ],
-   "points_est": 1,
-   "cue_est": "yellow",
-   "inning_est": 14
-  },
-  {
-   "index": 38,
-   "t": 353.75,
-   "from": {
-    "white": [
-     2.317,
-     0.163
-    ],
-    "yellow": [
-     2.481,
-     -0.191
-    ],
-    "red": [
-     -0.134,
-     0.08
-    ]
-   },
-   "to": {
-    "white": [
      0.978,
      1.48
     ],
@@ -942,16 +944,14 @@
     ]
    },
    "moved": [
-    "white",
-    "yellow",
-    "red"
+    "white"
    ],
-   "points_est": 1,
-   "cue_est": "yellow",
-   "inning_est": 14
+   "points_est": 0,
+   "cue_est": "white",
+   "inning_est": 4
   },
   {
-   "index": 39,
+   "index": 36,
    "t": 364.25,
    "from": {
     "white": [
@@ -987,11 +987,11 @@
     "red"
    ],
    "points_est": 1,
-   "cue_est": "yellow",
-   "inning_est": 14
+   "cue_est": "white",
+   "inning_est": 4
   },
   {
-   "index": 46,
+   "index": 43,
    "t": 393.0,
    "from": {
     "white": [
@@ -1029,7 +1029,7 @@
    "inning_est": 4
   },
   {
-   "index": 47,
+   "index": 44,
    "t": 393.5,
    "from": {
     "white": [
@@ -1068,7 +1068,7 @@
    "inning_est": 4
   },
   {
-   "index": 48,
+   "index": 45,
    "t": 405.5,
    "from": {
     "white": [
@@ -1106,7 +1106,7 @@
    "inning_est": 4
   },
   {
-   "index": 49,
+   "index": 46,
    "t": 407.0,
    "from": {
     "white": [
@@ -1144,7 +1144,7 @@
    "inning_est": 4
   },
   {
-   "index": 52,
+   "index": 49,
    "t": 428.0,
    "from": {
     "white": [
@@ -1180,10 +1180,10 @@
    ],
    "points_est": 0,
    "cue_est": "yellow",
-   "inning_est": 18
+   "inning_est": 19
   },
   {
-   "index": 53,
+   "index": 50,
    "t": 446.25,
    "from": {
     "white": [
@@ -1197,84 +1197,6 @@
     "red": [
      2.587,
      0.72
-    ]
-   },
-   "to": {
-    "white": [
-     0.733,
-     1.557
-    ],
-    "yellow": [
-     0.733,
-     1.638
-    ],
-    "red": [
-     1.791,
-     1.279
-    ]
-   },
-   "moved": [
-    "white",
-    "yellow",
-    "red"
-   ],
-   "points_est": 1,
-   "cue_est": "yellow",
-   "inning_est": 18
-  },
-  {
-   "index": 54,
-   "t": 476.0,
-   "from": {
-    "white": [
-     0.733,
-     1.557
-    ],
-    "yellow": [
-     0.733,
-     1.638
-    ],
-    "red": [
-     1.791,
-     1.279
-    ]
-   },
-   "to": {
-    "white": [
-     0.733,
-     1.557
-    ],
-    "yellow": [
-     0.732,
-     1.639
-    ],
-    "red": [
-     0.163,
-     1.652
-    ]
-   },
-   "moved": [
-    "red"
-   ],
-   "points_est": 0,
-   "cue_est": "red",
-   "inning_est": 0
-  },
-  {
-   "index": 56,
-   "t": 484.25,
-   "from": {
-    "white": [
-     0.733,
-     1.557
-    ],
-    "yellow": [
-     0.732,
-     1.639
-    ],
-    "red": [
-     0.164,
-     1.651
     ]
    },
    "to": {
@@ -1297,11 +1219,11 @@
     "red"
    ],
    "points_est": 1,
-   "cue_est": "red",
-   "inning_est": 0
+   "cue_est": "yellow",
+   "inning_est": 19
   },
   {
-   "index": 57,
+   "index": 51,
    "t": 510.25,
    "from": {
     "white": [
@@ -1339,7 +1261,7 @@
    "inning_est": 5
   },
   {
-   "index": 58,
+   "index": 52,
    "t": 512.25,
    "from": {
     "white": [
@@ -1377,7 +1299,7 @@
    "inning_est": 5
   },
   {
-   "index": 64,
+   "index": 58,
    "t": 517.0,
    "from": {
     "white": [
@@ -1417,7 +1339,7 @@
    "inning_est": 5
   },
   {
-   "index": 66,
+   "index": 60,
    "t": 529.75,
    "from": {
     "white": [
@@ -1455,7 +1377,7 @@
    "inning_est": 5
   },
   {
-   "index": 67,
+   "index": 61,
    "t": 530.25,
    "from": {
     "white": [
@@ -1493,7 +1415,7 @@
    "inning_est": 5
   },
   {
-   "index": 74,
+   "index": 68,
    "t": 558.0,
    "from": {
     "white": [
@@ -1531,47 +1453,7 @@
    "inning_est": 5
   },
   {
-   "index": 76,
-   "t": 560.25,
-   "from": {
-    "white": [
-     1.955,
-     1.045
-    ],
-    "yellow": [
-     0.828,
-     1.057
-    ],
-    "red": [
-     1.455,
-     1.573
-    ]
-   },
-   "to": {
-    "white": [
-     1.147,
-     -0.04
-    ],
-    "yellow": [
-     3.081,
-     -0.286
-    ],
-    "red": [
-     2.965,
-     -0.255
-    ]
-   },
-   "moved": [
-    "white",
-    "yellow",
-    "red"
-   ],
-   "points_est": 1,
-   "cue_est": "white",
-   "inning_est": 5
-  },
-  {
-   "index": 78,
+   "index": 71,
    "t": 585.25,
    "from": {
     "white": [
@@ -1611,7 +1493,7 @@
    "inning_est": 5
   },
   {
-   "index": 79,
+   "index": 72,
    "t": 596.75,
    "from": {
     "white": [
@@ -1651,7 +1533,7 @@
    "inning_est": 5
   },
   {
-   "index": 81,
+   "index": 74,
    "t": 634.5,
    "from": {
     "white": [
@@ -1689,7 +1571,7 @@
    "inning_est": 5
   },
   {
-   "index": 82,
+   "index": 75,
    "t": 638.0,
    "from": {
     "white": [
@@ -1727,7 +1609,7 @@
    "inning_est": 5
   },
   {
-   "index": 83,
+   "index": 76,
    "t": 638.5,
    "from": {
     "white": [
@@ -1745,86 +1627,6 @@
    },
    "to": {
     "white": [
-     0.282,
-     2.089
-    ],
-    "yellow": [
-     0.281,
-     2.222
-    ],
-    "red": [
-     -0.752,
-     2.213
-    ]
-   },
-   "moved": [
-    "white",
-    "yellow",
-    "red"
-   ],
-   "points_est": 1,
-   "cue_est": "white",
-   "inning_est": 5
-  },
-  {
-   "index": 84,
-   "t": 649.75,
-   "from": {
-    "white": [
-     0.282,
-     2.089
-    ],
-    "yellow": [
-     0.281,
-     2.222
-    ],
-    "red": [
-     -0.752,
-     2.213
-    ]
-   },
-   "to": {
-    "white": [
-     0.65,
-     1.291
-    ],
-    "yellow": [
-     0.643,
-     1.4
-    ],
-    "red": [
-     -0.074,
-     1.391
-    ]
-   },
-   "moved": [
-    "white",
-    "yellow",
-    "red"
-   ],
-   "points_est": 1,
-   "cue_est": "white",
-   "inning_est": 5
-  },
-  {
-   "index": 85,
-   "t": 652.75,
-   "from": {
-    "white": [
-     0.65,
-     1.291
-    ],
-    "yellow": [
-     0.643,
-     1.4
-    ],
-    "red": [
-     -0.074,
-     1.391
-    ]
-   },
-   "to": {
-    "white": [
      0.42,
      1.835
     ],
@@ -1838,96 +1640,15 @@
     ]
    },
    "moved": [
-    "white",
     "yellow",
     "red"
    ],
-   "points_est": 1,
-   "cue_est": "white",
-   "inning_est": 5
+   "points_est": 0,
+   "cue_est": "yellow",
+   "inning_est": 26
   },
   {
-   "index": 87,
-   "t": 664.25,
-   "from": {
-    "white": [
-     0.42,
-     1.835
-    ],
-    "yellow": [
-     2.185,
-     0.145
-    ],
-    "red": [
-     0.755,
-     0.928
-    ]
-   },
-   "to": {
-    "white": [
-     2.025,
-     2.519
-    ],
-    "yellow": [
-     0.259,
-     1.071
-    ],
-    "red": [
-     3.291,
-     2.553
-    ]
-   },
-   "moved": [
-    "white",
-    "yellow",
-    "red"
-   ],
-   "points_est": 1,
-   "cue_est": "white",
-   "inning_est": 5
-  },
-  {
-   "index": 88,
-   "t": 674.25,
-   "from": {
-    "white": [
-     2.025,
-     2.519
-    ],
-    "yellow": [
-     0.259,
-     1.071
-    ],
-    "red": [
-     3.291,
-     2.553
-    ]
-   },
-   "to": {
-    "white": [
-     0.412,
-     1.83
-    ],
-    "yellow": [
-     2.176,
-     0.133
-    ],
-    "red": [
-     0.748,
-     0.919
-    ]
-   },
-   "moved": [
-    "white",
-    "yellow",
-    "red"
-   ],
-   "points_est": 1,
-   "cue_est": "white",
-   "inning_est": 5
-  },
-  {
-   "index": 89,
+   "index": 79,
    "t": 681.0,
    "from": {
     "white": [
@@ -1963,10 +1684,10 @@
    ],
    "points_est": 0,
    "cue_est": "yellow",
-   "inning_est": 25
+   "inning_est": 26
   },
   {
-   "index": 91,
+   "index": 81,
    "t": 698.25,
    "from": {
     "white": [
@@ -2001,10 +1722,10 @@
    ],
    "points_est": 0,
    "cue_est": "yellow",
-   "inning_est": 25
+   "inning_est": 26
   },
   {
-   "index": 92,
+   "index": 82,
    "t": 730.25,
    "from": {
     "white": [
@@ -2039,10 +1760,10 @@
    ],
    "points_est": 0,
    "cue_est": "yellow",
-   "inning_est": 25
+   "inning_est": 26
   },
   {
-   "index": 95,
+   "index": 85,
    "t": 737.0,
    "from": {
     "white": [
@@ -2077,10 +1798,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 8
+   "inning_est": 9
   },
   {
-   "index": 96,
+   "index": 86,
    "t": 755.0,
    "from": {
     "white": [
@@ -2115,10 +1836,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 8
+   "inning_est": 9
   },
   {
-   "index": 97,
+   "index": 87,
    "t": 756.25,
    "from": {
     "white": [
@@ -2156,7 +1877,7 @@
    "inning_est": 0
   },
   {
-   "index": 98,
+   "index": 88,
    "t": 756.75,
    "from": {
     "white": [
@@ -2194,7 +1915,7 @@
    "inning_est": 0
   },
   {
-   "index": 100,
+   "index": 90,
    "t": 759.0,
    "from": {
     "white": [
@@ -2230,10 +1951,10 @@
    ],
    "points_est": 0,
    "cue_est": "yellow",
-   "inning_est": 27
+   "inning_est": 28
   },
   {
-   "index": 101,
+   "index": 91,
    "t": 770.25,
    "from": {
     "white": [
@@ -2268,10 +1989,10 @@
    ],
    "points_est": 0,
    "cue_est": "yellow",
-   "inning_est": 27
+   "inning_est": 28
   },
   {
-   "index": 102,
+   "index": 92,
    "t": 788.5,
    "from": {
     "white": [
@@ -2306,10 +2027,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 10
+   "inning_est": 11
   },
   {
-   "index": 104,
+   "index": 94,
    "t": 791.5,
    "from": {
     "white": [
@@ -2344,10 +2065,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 10
+   "inning_est": 11
   },
   {
-   "index": 106,
+   "index": 96,
    "t": 793.75,
    "from": {
     "white": [
@@ -2383,10 +2104,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 10
+   "inning_est": 11
   },
   {
-   "index": 107,
+   "index": 97,
    "t": 829.25,
    "from": {
     "white": [
@@ -2421,10 +2142,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 10
+   "inning_est": 11
   },
   {
-   "index": 108,
+   "index": 98,
    "t": 831.0,
    "from": {
     "white": [
@@ -2459,10 +2180,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 10
+   "inning_est": 11
   },
   {
-   "index": 110,
+   "index": 100,
    "t": 833.75,
    "from": {
     "white": [
@@ -2497,10 +2218,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 10
+   "inning_est": 11
   },
   {
-   "index": 111,
+   "index": 101,
    "t": 834.5,
    "from": {
     "white": [
@@ -2537,10 +2258,10 @@
    ],
    "points_est": 1,
    "cue_est": "white",
-   "inning_est": 10
+   "inning_est": 11
   },
   {
-   "index": 112,
+   "index": 102,
    "t": 844.25,
    "from": {
     "white": [
@@ -2576,10 +2297,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 10
+   "inning_est": 11
   },
   {
-   "index": 113,
+   "index": 103,
    "t": 864.75,
    "from": {
     "white": [
@@ -2614,10 +2335,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 10
+   "inning_est": 11
   },
   {
-   "index": 114,
+   "index": 104,
    "t": 866.75,
    "from": {
     "white": [
@@ -2652,10 +2373,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 10
+   "inning_est": 11
   },
   {
-   "index": 116,
+   "index": 106,
    "t": 868.75,
    "from": {
     "white": [
@@ -2691,10 +2412,10 @@
    ],
    "points_est": 0,
    "cue_est": "yellow",
-   "inning_est": 36
+   "inning_est": 37
   },
   {
-   "index": 117,
+   "index": 107,
    "t": 880.25,
    "from": {
     "white": [
@@ -2729,10 +2450,10 @@
    ],
    "points_est": 0,
    "cue_est": "yellow",
-   "inning_est": 36
+   "inning_est": 37
   },
   {
-   "index": 119,
+   "index": 109,
    "t": 906.75,
    "from": {
     "white": [
@@ -2769,10 +2490,10 @@
    ],
    "points_est": 1,
    "cue_est": "yellow",
-   "inning_est": 36
+   "inning_est": 37
   },
   {
-   "index": 122,
+   "index": 112,
    "t": 948.5,
    "from": {
     "white": [
@@ -2807,10 +2528,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 12
+   "inning_est": 13
   },
   {
-   "index": 123,
+   "index": 113,
    "t": 949.0,
    "from": {
     "white": [
@@ -2845,10 +2566,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 12
+   "inning_est": 13
   },
   {
-   "index": 124,
+   "index": 114,
    "t": 949.5,
    "from": {
     "white": [
@@ -2885,10 +2606,10 @@
    ],
    "points_est": 1,
    "cue_est": "white",
-   "inning_est": 12
+   "inning_est": 13
   },
   {
-   "index": 125,
+   "index": 115,
    "t": 960.75,
    "from": {
     "white": [
@@ -2926,7 +2647,7 @@
    "inning_est": 0
   },
   {
-   "index": 126,
+   "index": 116,
    "t": 979.5,
    "from": {
     "white": [
@@ -2964,7 +2685,7 @@
    "inning_est": 0
   },
   {
-   "index": 128,
+   "index": 118,
    "t": 982.75,
    "from": {
     "white": [
@@ -2999,10 +2720,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 12
+   "inning_est": 13
   },
   {
-   "index": 129,
+   "index": 119,
    "t": 983.5,
    "from": {
     "white": [
@@ -3037,10 +2758,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 12
+   "inning_est": 13
   },
   {
-   "index": 130,
+   "index": 120,
    "t": 984.0,
    "from": {
     "white": [
@@ -3077,10 +2798,10 @@
    ],
    "points_est": 1,
    "cue_est": "white",
-   "inning_est": 12
+   "inning_est": 13
   },
   {
-   "index": 131,
+   "index": 121,
    "t": 1006.75,
    "from": {
     "white": [
@@ -3115,10 +2836,10 @@
    ],
    "points_est": 0,
    "cue_est": "white",
-   "inning_est": 12
+   "inning_est": 13
   },
   {
-   "index": 132,
+   "index": 122,
    "t": 1008.0,
    "from": {
     "white": [
@@ -3154,10 +2875,10 @@
    ],
    "points_est": 0,
    "cue_est": "yellow",
-   "inning_est": 41
+   "inning_est": 42
   },
   {
-   "index": 133,
+   "index": 123,
    "t": 1048.0,
    "from": {
     "white": [
@@ -3193,10 +2914,10 @@
    ],
    "points_est": 0,
    "cue_est": "yellow",
-   "inning_est": 41
+   "inning_est": 42
   },
   {
-   "index": 134,
+   "index": 124,
    "t": 1060.75,
    "from": {
     "white": [
@@ -3232,10 +2953,10 @@
    ],
    "points_est": 0,
    "cue_est": "yellow",
-   "inning_est": 41
+   "inning_est": 42
   },
   {
-   "index": 135,
+   "index": 125,
    "t": 1099.25,
    "from": {
     "white": [
@@ -3272,10 +2993,10 @@
    ],
    "points_est": 1,
    "cue_est": "yellow",
-   "inning_est": 41
+   "inning_est": 42
   },
   {
-   "index": 136,
+   "index": 126,
    "t": 1104.5,
    "from": {
     "white": [
@@ -3312,10 +3033,10 @@
    ],
    "points_est": 1,
    "cue_est": "yellow",
-   "inning_est": 41
+   "inning_est": 42
   },
   {
-   "index": 138,
+   "index": 128,
    "t": 1119.5,
    "from": {
     "white": [
@@ -3351,10 +3072,10 @@
    ],
    "points_est": 0,
    "cue_est": "yellow",
-   "inning_est": 41
+   "inning_est": 42
   },
   {
-   "index": 139,
+   "index": 129,
    "t": 1128.5,
    "from": {
     "white": [
@@ -3392,7 +3113,7 @@
    "inning_est": 0
   },
   {
-   "index": 140,
+   "index": 130,
    "t": 1145.75,
    "from": {
     "white": [
@@ -3432,13 +3153,13 @@
  ],
  "validation": {
   "innings_official": 6,
-  "innings_estimated": 41,
+  "innings_estimated": 42,
   "official_totals": [
    7,
    15
   ],
   "estimated_carom_totals": [
-   12,
+   8,
    0
   ],
   "official_points_per_inning": [
@@ -3468,13 +3189,13 @@
    ]
   ],
   "estimated_points_per_inning": [
+   4,
+   0,
+   0,
+   1,
    3,
-   0,
-   0,
-   0,
-   9,
    0
   ],
-  "totals_gap": -10
+  "totals_gap": -14
  }
 }

@@ -7,4 +7,4 @@ homography, segment strokes from rest positions, and check the resulting
 score reconstruction against the official inning sheet.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

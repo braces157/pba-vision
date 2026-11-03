@@ -26,8 +26,10 @@ def write_artifact(
         "meta": meta,
         "stats": {
             "frames_seen": reconstruction.frames_seen,
-            "frames_full_table": reconstruction.frames_on_table,
-            "frames_quad_locked": reconstruction.frames_quad_locked,
+            "camera_views": reconstruction.camera_views,
+            "stable_cameras": reconstruction.stable_cameras,
+            "main_camera_frames": reconstruction.main_camera_frames,
+            "frames_measured": reconstruction.frames_measured,
             "frames_all_balls": reconstruction.frames_all_balls,
             "rest_states": len(reconstruction.rests),
             "strokes": len(reconstruction.strokes),

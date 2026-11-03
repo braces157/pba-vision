@@ -23,7 +23,8 @@ from dataclasses import dataclass, field
 import cv2
 import numpy as np
 
-from .vision.detect import WORK_WIDTH, analyse_frame, cloth_mask
+from .vision.camera import MainCameraTracker
+from .vision.detect import WORK_WIDTH, analyse_frame, cloth_bbox, cloth_mask
 from .vision.table import cloth_quad, homography, quad_plausible, to_meters
 
 #: A rest is at least this many analysed frames with all three balls present.
@@ -71,9 +72,11 @@ class Reconstruction:
     strokes: list[Stroke] = field(default_factory=list)
     rests: list[RestState] = field(default_factory=list)
     frames_seen: int = 0
-    frames_on_table: int = 0
-    frames_quad_locked: int = 0
+    frames_measured: int = 0
     frames_all_balls: int = 0
+    camera_views: int = 0
+    stable_cameras: int = 0
+    main_camera_frames: int = 0
     fps: float = 4.0
 
 
@@ -139,12 +142,22 @@ def _next_cue(cue: str | None) -> str | None:
 
 
 def reconstruct(frames: list, fps: float, progress: Callable[[str], None] | None = None) -> Reconstruction:
-    """Run the full reconstruction over a list of frame paths."""
+    """Run the full reconstruction over a list of frame paths.
+
+    Two passes. The survey pass learns the broadcast's stable cameras — a
+    fixed tripod reveals itself as a dominant cloth-quad cluster. The
+    measurement pass then reads positions only on stable cameras, and splits
+    the stream into per-camera segments so a cut never joins two views into
+    one "movement". Segments from different cameras produce strokes
+    independently; because positions are in table meters, the replay filter
+    then recognizes when two cameras saw the same shot and keeps one.
+    """
     out = Reconstruction(fps=fps)
-    mappings: list[tuple[int, dict[str, tuple[float, float]]]] = []
-    last_quad: np.ndarray | None = None
     say = progress or (lambda _msg: None)
 
+    # ---- pass 1: survey the cameras -------------------------------------
+    tracker = MainCameraTracker()
+    gated: list[tuple[int, str]] = []  # frames the table gate passed
     for index, path in enumerate(frames):
         img = cv2.imread(str(path))
         if img is None:
@@ -154,56 +167,92 @@ def reconstruct(frames: list, fps: float, progress: Callable[[str], None] | None
         img = cv2.resize(img, (WORK_WIDTH, int(img.shape[0] * scale)))
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-        result = analyse_frame(img)
-        if result.table_bbox is None:
+        found = cloth_bbox(hsv)
+        if found is None:
             continue
-        out.frames_on_table += 1
+        bbox, fraction = found
+        w, h = bbox[2], max(bbox[3], 1)
+        if fraction < 0.10 or not 1.35 <= w / h <= 2.4:
+            continue
+        quad = cloth_quad(cloth_mask(hsv))
+        if quad is None or not quad_plausible(quad):
+            continue
+        tracker.observe(quad, img.shape[:2])
+        gated.append((index, str(path)))
+
+    survey = tracker.finalize()
+    out.camera_views = survey["cameras"]
+    out.stable_cameras = survey["stable_cameras"]
+    out.main_camera_frames = survey["main_camera_frames"]
+    say(f"survey: {survey['cameras']} views, {survey['stable_cameras']} stable cameras, "
+        f"main covers {survey['main_camera_frames']}/{survey['total_frames']} table frames, "
+        f"cluster sizes {survey['largest_clusters']}")
+    if survey["stable_cameras"] == 0:
+        say("no stable camera found — refusing to guess; no positions measured")
+        return out
+
+    # ---- pass 2: measure on stable cameras, keep the camera label --------
+    labeled: list[tuple[int, int, dict[str, tuple[float, float]]]] = []
+    for index, path in gated:
+        img = cv2.imread(path)
+        if img is None:
+            continue
+        scale = WORK_WIDTH / img.shape[1]
+        img = cv2.resize(img, (WORK_WIDTH, int(img.shape[0] * scale)))
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
         quad = cloth_quad(cloth_mask(hsv))
-        if quad is not None and not quad_plausible(quad):
-            quad = None
-        if quad is not None:
-            last_quad = quad
-            out.frames_quad_locked += 1
-        elif last_quad is None:
+        if quad is None or not quad_plausible(quad):
             continue
-        else:
-            quad = last_quad
+        label = tracker.label(quad, img.shape[:2])
+        if label is None:
+            continue  # an unstable view: transition graphics, drifting zoom
         matrix = homography(quad)
         if matrix is None:
             continue
-
+        result = analyse_frame(img)
         if not result.all_three:
             continue
-        out.frames_all_balls += 1
-        mappings.append((index, {k: to_meters(matrix, result.balls[k][0], result.balls[k][1]) for k in BALLS}))
+        out.frames_measured += 1
+        positions = {k: to_meters(matrix, result.balls[k][0], result.balls[k][1]) for k in BALLS}
+        labeled.append((index, label, positions))
 
-    say(f"{out.frames_seen} frames read, {out.frames_on_table} full-table, "
-        f"{out.frames_quad_locked} quad-locked, {out.frames_all_balls} with all three balls")
+    say(f"{out.frames_seen} frames read, {out.frames_measured} measured on "
+        f"{survey['stable_cameras']} stable cameras")
 
-    out.rests = _rest_chain(mappings, fps)
-    say(f"{len(out.rests)} rest states")
+    # ---- rest states, per camera segment --------------------------------
+    rest_groups = [_rest_chain([(idx, pos) for idx, _label, pos in segment], fps)
+                   for segment in _segments(labeled, REST_GAP_FRAMES)]
+    out.rests = [rest for group in rest_groups for rest in group]
+    say(f"{len(out.rests)} rest states in {len(rest_groups)} camera segments")
+
+    # ---- strokes: candidates inside each segment, merged in time ---------
+    candidates: list[tuple[int, RestState, RestState]] = []
+    for group in rest_groups:
+        for before, after in zip(group, group[1:]):
+            candidates.append((before.frame, before, after))
+    candidates.sort(key=lambda c: c[0])
 
     inning_of = {"white": 1, "yellow": 1}
     anchored_cue: str | None = None
     kept: list[tuple[dict[str, bool], RestState]] = []
-    for i, (before, after) in enumerate(zip(out.rests, out.rests[1:])):
+    for i, (_frame, before, after) in enumerate(candidates):
         moved = {
             k: bool(np.hypot(before.positions[k][0] - after.positions[k][0],
                              before.positions[k][1] - after.positions[k][1]) > MOVE_EPSILON)
             for k in BALLS
         }
         if not any(moved.values()):
-            continue  # detection gap or camera cut, not a stroke
+            continue  # detection gap, not a stroke
         travel = sum(
             np.hypot(before.positions[k][0] - after.positions[k][0],
                      before.positions[k][1] - after.positions[k][1])
             for k in BALLS
         )
         if travel > TRAVEL_CAP:
-            continue  # physically implausible as one transition: a cut or lost tracking
+            continue  # physically implausible as one transition
         if _is_replay(before, moved, kept):
-            continue  # replays repeat a shot that was already recorded
+            continue  # another camera (or a replay) already recorded this shot
 
         points, detected_cue = classify(moved)
         cue = detected_cue or anchored_cue
@@ -227,6 +276,29 @@ def reconstruct(frames: list, fps: float, progress: Callable[[str], None] | None
 
     say(f"{len(out.strokes)} strokes reconstructed")
     return out
+
+
+def _segments(labeled: list, _gap: int) -> list[list]:
+    """Split the labeled frame stream into maximal same-camera runs.
+
+    A run breaks when the camera label changes — that is the only boundary
+    that can falsify positions, because two stable cameras map the same
+    resting balls a few centimetres apart. Frame gaps inside a segment are
+    harmless: the broadcast cuts away and back to the *same* tripod between
+    strokes all the time, and the rest chain handles gaps on its own.
+    """
+    runs: list[list] = []
+    current: list = []
+    previous_label: int | None = None
+    for index, label, positions in labeled:
+        if current and label != previous_label:
+            runs.append(current)
+            current = []
+        current.append((index, label, positions))
+        previous_label = label
+    if current:
+        runs.append(current)
+    return runs
 
 
 def _is_replay(before: RestState, moved: dict[str, bool], kept: list[tuple[dict[str, bool], RestState]]) -> bool:
