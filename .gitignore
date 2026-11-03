@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Media and working data — never commit broadcast footage or derived frames
+data/
+*.mp4
+*.mkv
+*.webm
+frames/
+
+# Reports and plots produced by local runs (examples/ holds curated ones)
+reports/
+out*/
+/scatter*.png
+
+# Tooling
+.ruff_cache/
+.pytest_cache/
+.coverage
