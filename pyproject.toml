@@ -1,6 +1,6 @@
 [project]
 name = "pba-vision"
-version = "0.2.0"
+version = "0.3.0"
 description = "Reconstruct 3-cushion billiards shot-by-shot ball positions from PBA broadcast VODs, validated against the official scoring terminal."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -22,6 +22,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+scoreboard = ["rapidocr-onnxruntime>=1.4.4,<2"]
 plot = ["matplotlib>=3.7"]
 dev = ["pytest>=7", "ruff>=0.5", "matplotlib>=3.7"]
 
