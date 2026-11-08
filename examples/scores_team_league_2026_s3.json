@@ -1,0 +1,299 @@
+{
+  "schema": "pba-vision/scores@0.1",
+  "meta": {
+    "video_id": "jBbjq-VjxM4",
+    "video_path": "data/video_jBbjq-VjxM4.mp4",
+    "sample_fps": 2.0,
+    "players": [
+      "Cenet",
+      "Q. Nguyen"
+    ],
+    "set_number": 3,
+    "title": "Cenet vs Q. Nguyen, PBA Team League 2026-27 Round 4, set 3",
+    "video_url": "https://www.youtube.com/watch?v=jBbjq-VjxM4"
+  },
+  "scoreboard": {
+    "source": "broadcast_scoreboard",
+    "profile": "pba-team-league",
+    "player_order": "top_to_bottom",
+    "target": 15,
+    "initial": [
+      0,
+      0
+    ],
+    "final": [
+      5,
+      15
+    ],
+    "starts_at_zero": true,
+    "reaches_target": true,
+    "samples": 2166,
+    "readable_samples": 1438,
+    "rejected_regressions": 0,
+    "readings": [
+      {
+        "t": 21.0,
+        "scores": [
+          0,
+          0
+        ]
+      },
+      {
+        "t": 199.0,
+        "scores": [
+          2,
+          0
+        ]
+      },
+      {
+        "t": 274.5,
+        "scores": [
+          2,
+          1
+        ]
+      },
+      {
+        "t": 313.5,
+        "scores": [
+          2,
+          3
+        ]
+      },
+      {
+        "t": 357.5,
+        "scores": [
+          2,
+          4
+        ]
+      },
+      {
+        "t": 401.5,
+        "scores": [
+          2,
+          5
+        ]
+      },
+      {
+        "t": 441.0,
+        "scores": [
+          2,
+          6
+        ]
+      },
+      {
+        "t": 477.5,
+        "scores": [
+          2,
+          8
+        ]
+      },
+      {
+        "t": 515.5,
+        "scores": [
+          2,
+          10
+        ]
+      },
+      {
+        "t": 600.0,
+        "scores": [
+          4,
+          10
+        ]
+      },
+      {
+        "t": 847.5,
+        "scores": [
+          5,
+          10
+        ]
+      },
+      {
+        "t": 933.5,
+        "scores": [
+          5,
+          11
+        ]
+      },
+      {
+        "t": 976.5,
+        "scores": [
+          5,
+          12
+        ]
+      },
+      {
+        "t": 1006.0,
+        "scores": [
+          5,
+          14
+        ]
+      },
+      {
+        "t": 1055.5,
+        "scores": [
+          5,
+          15
+        ]
+      }
+    ],
+    "changes": [
+      {
+        "t": 199.0,
+        "scores": [
+          2,
+          0
+        ],
+        "delta": [
+          2,
+          0
+        ]
+      },
+      {
+        "t": 274.5,
+        "scores": [
+          2,
+          1
+        ],
+        "delta": [
+          0,
+          1
+        ]
+      },
+      {
+        "t": 313.5,
+        "scores": [
+          2,
+          3
+        ],
+        "delta": [
+          0,
+          2
+        ]
+      },
+      {
+        "t": 357.5,
+        "scores": [
+          2,
+          4
+        ],
+        "delta": [
+          0,
+          1
+        ]
+      },
+      {
+        "t": 401.5,
+        "scores": [
+          2,
+          5
+        ],
+        "delta": [
+          0,
+          1
+        ]
+      },
+      {
+        "t": 441.0,
+        "scores": [
+          2,
+          6
+        ],
+        "delta": [
+          0,
+          1
+        ]
+      },
+      {
+        "t": 477.5,
+        "scores": [
+          2,
+          8
+        ],
+        "delta": [
+          0,
+          2
+        ]
+      },
+      {
+        "t": 515.5,
+        "scores": [
+          2,
+          10
+        ],
+        "delta": [
+          0,
+          2
+        ]
+      },
+      {
+        "t": 600.0,
+        "scores": [
+          4,
+          10
+        ],
+        "delta": [
+          2,
+          0
+        ]
+      },
+      {
+        "t": 847.5,
+        "scores": [
+          5,
+          10
+        ],
+        "delta": [
+          1,
+          0
+        ]
+      },
+      {
+        "t": 933.5,
+        "scores": [
+          5,
+          11
+        ],
+        "delta": [
+          0,
+          1
+        ]
+      },
+      {
+        "t": 976.5,
+        "scores": [
+          5,
+          12
+        ],
+        "delta": [
+          0,
+          1
+        ]
+      },
+      {
+        "t": 1006.0,
+        "scores": [
+          5,
+          14
+        ],
+        "delta": [
+          0,
+          2
+        ]
+      },
+      {
+        "t": 1055.5,
+        "scores": [
+          5,
+          15
+        ],
+        "delta": [
+          0,
+          1
+        ]
+      }
+    ],
+    "timing": "first sample of each confirmed score; overlay updates may lag the shot",
+    "resolution": "score updates, not shot outcomes; a delta may cover multiple shots"
+  }
+}
