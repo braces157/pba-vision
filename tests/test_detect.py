@@ -27,6 +27,29 @@ def test_finds_all_three_balls():
     assert result.all_three
 
 
+def test_white_rail_does_not_hide_the_white_ball():
+    img = draw_table()
+    cv2.polylines(img, [QUAD_PX.astype(np.int32)], True, (255, 255, 255), 14)
+    for colour, fx in [("white", 0.3), ("yellow", 0.5), ("red", 0.7)]:
+        x, y = place(img, QUAD_PX, fx, 0.5)
+        draw_ball(img, x, y, colour)
+    result = analyse_frame(img)
+    assert result.all_three
+    x, y = place(img, QUAD_PX, 0.3, 0.5)
+    scale = pbavision.vision.detect.WORK_WIDTH / img.shape[1]
+    assert np.linalg.norm(np.array(result.balls["white"]) - [x * scale, y * scale]) < 4
+
+
+def test_white_decoy_inside_bbox_but_outside_cloth_is_ignored():
+    img = draw_table()
+    x, y = place(img, QUAD_PX, 0.5, 0.5)
+    draw_ball(img, x, y, "white")
+    draw_ball(img, 240, 170, "white", radius=10)
+    result = analyse_frame(img)
+    scale = pbavision.vision.detect.WORK_WIDTH / img.shape[1]
+    assert np.linalg.norm(np.array(result.balls["white"]) - [x * scale, y * scale]) < 4
+
+
 def test_positions_are_near_truth():
     img = draw_table()
     fx, fy = 0.62, 0.41

@@ -16,11 +16,31 @@ import shutil
 import subprocess
 import urllib.request
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 import yt_dlp
 
 _SITE = "https://www.pbatour.org"
 _UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36"
+
+
+def youtube_id(value: str) -> str:
+    """Accept a plain video ID or a YouTube watch/short URL."""
+    if re.fullmatch(r"[\w-]{11}", value, flags=re.ASCII):
+        return value
+    parsed = urlparse(value)
+    host = (parsed.hostname or "").lower()
+    candidate = ""
+    if host == "youtu.be":
+        candidate = parsed.path.strip("/")
+    elif host in {"youtube.com", "www.youtube.com", "m.youtube.com"}:
+        if parsed.path == "/watch":
+            candidate = parse_qs(parsed.query).get("v", [""])[0]
+        elif parsed.path.startswith(("/shorts/", "/embed/")):
+            candidate = parsed.path.split("/")[2]
+    if not re.fullmatch(r"[\w-]{11}", candidate, flags=re.ASCII):
+        raise ValueError("expected a YouTube video ID or URL")
+    return candidate
 
 
 def media_videos(page: int = 1, page_size: int = 12) -> list[dict]:
@@ -39,6 +59,7 @@ def media_videos(page: int = 1, page_size: int = 12) -> list[dict]:
 
 def download(video_id: str, dest: Path, max_height: int = 1080) -> Path:
     """Download a YouTube video to ``dest`` (suffix .mp4), progressive AVC only."""
+    video_id = youtube_id(video_id)
     dest.parent.mkdir(parents=True, exist_ok=True)
     options = {
         "format": f"bv*[height<={max_height}][vcodec^=avc1]/bv*[height<={max_height}]",

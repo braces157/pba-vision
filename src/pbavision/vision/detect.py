@@ -82,12 +82,16 @@ def detect_balls(
     x1 = min(hsv.shape[1], x + w + params.bbox_margin)
     y1 = min(hsv.shape[0], y + h + params.bbox_margin)
     roi = hsv[y0:y1, x0:x1]
+    cloth_contours, _ = cv2.findContours(cloth_mask(hsv), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cloth_outline = max(cloth_contours, key=cv2.contourArea) if cloth_contours else None
 
     expected = 130.0  # contour area of a ~13 px ball
     out: dict[str, tuple[float, float]] = {}
     for colour in ("white", "yellow", "red"):
         mask = cv2.morphologyEx(_ball_mask(roi, params, colour), cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # A white rail can surround the white ball in this mask. External-only
+        # contours discard the enclosed ball along with the rail's interior.
+        contours, _ = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         best: tuple[float, float, float] | None = None
         for contour in contours:
             area = cv2.contourArea(contour)
@@ -99,9 +103,11 @@ def detect_balls(
             circularity = 4 * np.pi * area / (perimeter * perimeter)
             if circularity < params.min_circularity:
                 continue
+            (cx, cy), _ = cv2.minEnclosingCircle(contour)
+            if cloth_outline is not None and cv2.pointPolygonTest(cloth_outline, (cx + x0, cy + y0), True) < 3:
+                continue
             score = circularity * (1.0 - abs(area - expected) / 900.0)
             if best is None or score > best[0]:
-                (cx, cy), _ = cv2.minEnclosingCircle(contour)
                 best = (score, cx + x0, cy + y0)
         if best:
             out[colour] = (best[1], best[2])

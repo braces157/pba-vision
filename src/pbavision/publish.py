@@ -20,6 +20,7 @@ def write_artifact(
     meta: dict,
     reconstruction: Reconstruction,
     validation: Validation,
+    broadcast_scores: dict | None = None,
 ) -> Path:
     artifact = {
         "schema": "pba-vision/reconstruction@0.1",
@@ -57,6 +58,8 @@ def write_artifact(
             "totals_gap": validation.totals_gap,
         },
     }
+    if broadcast_scores is not None:
+        artifact["scoreboard"] = broadcast_scores
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(artifact, ensure_ascii=False, indent=1), encoding="utf-8")
     return path

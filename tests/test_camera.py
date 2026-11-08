@@ -39,6 +39,17 @@ def test_small_jitter_stays_on_camera():
     assert tracker.accept(drifted, SHAPE)
 
 
+def test_locked_calibration_does_not_follow_temporary_edge_occlusions():
+    tracker = MainCameraTracker()
+    _feed(tracker, OVERHEAD, 100)
+    tracker.finalize()
+    occluded = OVERHEAD + np.array([[12, 5], [0, 0], [0, 0], [12, -5]], dtype=np.float32)
+    label = tracker.label(occluded, SHAPE)
+    assert label is not None
+    assert np.allclose(tracker.calibration(label, SHAPE), OVERHEAD)
+    assert np.allclose(tracker.calibration(label, (1080, 1920)), OVERHEAD * 2)
+
+
 def test_rare_view_is_not_promoted():
     tracker = MainCameraTracker()
     _feed(tracker, OVERHEAD, 300, jitter=2.0)

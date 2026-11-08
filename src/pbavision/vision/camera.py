@@ -104,6 +104,11 @@ class MainCameraTracker:
                 return index
         return None
 
+    def calibration(self, label: int, frame_shape: tuple[int, int]) -> np.ndarray:
+        """One fixed quad per tripod; temporary edge occlusions cannot move it."""
+        h, w = frame_shape
+        return (self._stable[label].quad * np.array([w, h])).astype(np.float32)
+
     # ---------------------------------------------------------------- private
 
     def _normalize(self, quad: np.ndarray, frame_shape: tuple[int, int]) -> np.ndarray:

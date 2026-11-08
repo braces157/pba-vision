@@ -14,10 +14,11 @@ from pathlib import Path
 
 from .align.innings import parse_set_innings
 from .align.terminal import Terminal, TerminalError
-from .ingest import download, extract_frames, media_videos
+from .ingest import download, extract_frames, media_videos, youtube_id
 from .pipeline import reconstruct
 from .publish import write_artifact
 from .validate import validate
+from .vision.scoreboard import read_video_scores
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -32,6 +33,16 @@ def main(argv: list[str] | None = None) -> int:
     find.add_argument("--keyword", required=True, help="title fragment, e.g. 월드챔피언십")
     find.add_argument("--players", nargs=2, required=True, help="two player names, as the Korean feed spells them")
 
+    scores = sub.add_parser("scores", help="read real scores from a PBA Team League broadcast")
+    scores.add_argument("--video", help="YouTube video ID or watch URL")
+    scores.add_argument("--local-video", type=Path, help="read an existing video instead of downloading")
+    scores.add_argument("--workdir", type=Path, default=Path("data"))
+    scores.add_argument("--sample-fps", type=float, default=2.0)
+    scores.add_argument("--target", type=int, default=15, help="winning set score")
+    scores.add_argument("--players", nargs=2, help="player names in scoreboard order: top then bottom")
+    scores.add_argument("--set-number", type=int)
+    scores.add_argument("--out", type=Path, default=Path("scores.json"))
+
     run = sub.add_parser("run", help="reconstruct one broadcast set end to end")
     run.add_argument("--video", required=True, help="YouTube video id of the set broadcast")
     run.add_argument("--season", type=int, required=True)
@@ -41,6 +52,8 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--workdir", type=Path, default=Path("data"))
     run.add_argument("--fps", type=float, default=4.0)
     run.add_argument("--out", type=Path, default=Path("reconstruction.json"))
+    run.add_argument("--scoreboard-profile", choices=["pba-team-league"],
+                     help="include broadcast scores separately from CV estimates")
 
     args = parser.parse_args(argv)
     try:
@@ -59,7 +72,9 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.command == "run":
             return _run(args)
-    except (TerminalError, RuntimeError) as exc:
+        if args.command == "scores":
+            return _scores(args)
+    except (TerminalError, RuntimeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     return 0
@@ -98,6 +113,10 @@ def _run(args) -> int:
     validation = validate(reconstruction, sheet)
     print(validation.summary())
 
+    broadcast_scores = None
+    if args.scoreboard_profile:
+        broadcast_scores = read_video_scores(video_path, progress=print).to_dict()
+
     artifact = write_artifact(
         args.out,
         meta={
@@ -113,8 +132,33 @@ def _run(args) -> int:
         },
         reconstruction=reconstruction,
         validation=validation,
+        broadcast_scores=broadcast_scores,
     )
     print(f"artifact: {artifact}")
+    return 0
+
+
+def _scores(args) -> int:
+    if not args.video and not args.local_video:
+        raise ValueError("provide --video or --local-video")
+    video_id = youtube_id(args.video) if args.video else None
+    path = args.local_video or args.workdir / f"video_{video_id}.mp4"
+    if not args.local_video and not path.exists():
+        download(video_id, path)
+    timeline = read_video_scores(path, sample_fps=args.sample_fps, target=args.target, progress=print)
+    artifact = {
+        "schema": "pba-vision/scores@0.1",
+        "meta": {"video_id": video_id, "video_path": str(path), "sample_fps": args.sample_fps,
+                 "players": args.players, "set_number": args.set_number},
+        "scoreboard": timeline.to_dict(),
+    }
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(json.dumps(artifact, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"broadcast final (top, bottom): {artifact['scoreboard']['final']}")
+    print(f"artifact: {args.out}")
+    if not artifact["scoreboard"]["starts_at_zero"] or not artifact["scoreboard"]["reaches_target"]:
+        print("incomplete set coverage: could not confirm both opening 0-0 and a winning score", file=sys.stderr)
+        return 2
     return 0
 
 
