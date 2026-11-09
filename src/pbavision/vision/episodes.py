@@ -33,21 +33,32 @@ def movement_windows(samples: list[dict], cue: str) -> list[dict]:
     active = None
     displaced = []
     settled_since = None
+    recent_start = 0
+    rest_index = None
     for i, sample in enumerate(samples):
         t, points = sample["t"], sample["points"]
-        still = resting(samples[max(0, i - 24):i + 1], t)
+        if sample.get("live_identity") is False:
+            if active is not None:
+                windows.append({**active, "last": max(active["first"], i - 1),
+                                "end_settled": False, "end_reason": "timeline_mismatch"})
+            active, anchor, last_rest, rest_index, settled_since = None, None, None, None, None
+            displaced = []
+            continue
+        while recent_start < i and samples[recent_start]["t"] < t - .7:
+            recent_start += 1
+        still = resting(samples[recent_start:i + 1], t)
         if active is not None:
             if still:
                 settled_since = t if settled_since is None else settled_since
                 if t - settled_since >= .6:
                     windows.append({**active, "last": i, "end_settled": True, "end_reason": "settled"})
                     active, settled_since = None, None
-                    anchor, last_rest = points.get(cue), t
+                    anchor, last_rest, rest_index = points.get(cue), t, i
             else:
                 settled_since = None
             continue
         if still:
-            anchor, last_rest = points.get(cue), t
+            anchor, last_rest, rest_index = points.get(cue), t, i
             displaced = []
             continue
         if cue not in points or not sample.get("eligible", False):
@@ -62,15 +73,18 @@ def movement_windows(samples: list[dict], cue: str) -> list[dict]:
                 first = displaced[0]
                 while first > 0 and samples[first]["t"] > samples[displaced[0]]["t"] - .55:
                     first -= 1
-                active = {"first": first, "start_observed": True}
+                visible_departure = rest_index is not None and all(
+                    cue in s["points"] for s in samples[rest_index:displaced[-1] + 1]
+                )
+                active = {"first": first, "start_observed": visible_departure, "rest_before_start": last_rest}
                 anchor, last_rest, displaced = None, None, []
         else:
             # No preceding rest: record only the visible fragment, explicitly.
-            recent = [(j, s) for j, s in enumerate(samples[max(0, i - 7):i + 1], max(0, i - 7))
+            recent = [(j, s) for j, s in enumerate(samples[recent_start:i + 1], recent_start)
                       if cue in s["points"]]
-            if len(recent) >= 5 and np.linalg.norm(
+            if len(recent) >= 4 and t - recent[0][1]["t"] >= .2 and np.linalg.norm(
                 np.asarray(points[cue]) - recent[0][1]["points"][cue]
-            ) > .12:
+            ) > .055:
                 active = {"first": recent[0][0], "start_observed": False}
     if active is not None:
         windows.append({**active, "last": len(samples) - 1, "end_settled": False, "end_reason": "camera_cut"})

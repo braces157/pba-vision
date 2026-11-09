@@ -18,6 +18,13 @@ import numpy as np
 COLOURS = {"white": (255, 255, 255), "yellow": (0, 230, 255), "red": (30, 30, 255)}
 
 
+def review_crop(bed: np.ndarray, shape: tuple[int, int]) -> tuple[int, int, int, int]:
+    h, w = shape
+    x1, y1 = np.floor(np.min(bed, axis=0) - 24).astype(int)
+    x2, y2 = np.ceil(np.max(bed, axis=0) + 24).astype(int)
+    return max(0, x1), max(0, y1), min(w, x2 + 1), min(h, y2 + 1)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("history", type=Path)
@@ -61,8 +68,9 @@ def main():
                             for p in matches:
                                 xy = cv2.perspectiveTransform(np.array([[p[1:3]]], np.float32), pixels)[0, 0]
                                 cv2.circle(img, tuple(np.round(xy).astype(int)), 9, COLOURS[ball], 1, cv2.LINE_AA)
-                    tile = img[65:395, 160:790].copy()
-                    cv2.rectangle(tile, (0, 0), (630, 25), (25, 30, 35), -1)
+                    x1, y1, x2, y2 = review_crop(bed, img.shape[:2])
+                    tile = cv2.copyMakeBorder(img[y1:y2, x1:x2], 28, 0, 0, 0,
+                                              cv2.BORDER_CONSTANT, value=(25, 30, 35))
                     label = f"Turn {turn['turn']} / movement {number} / {q['start'] + relative:.3f}s"
                     cv2.putText(tile, label, (8, 17), cv2.FONT_HERSHEY_SIMPLEX, .45, (255, 255, 255), 1)
                     tiles.append(tile)

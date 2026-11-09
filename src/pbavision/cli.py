@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from dataclasses import asdict
 from pathlib import Path
 
 from .align.innings import parse_set_innings
@@ -52,8 +53,10 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--workdir", type=Path, default=Path("data"))
     run.add_argument("--fps", type=float, default=4.0)
     run.add_argument("--out", type=Path, default=Path("reconstruction.json"))
+    run.add_argument("--raw-out", type=Path, help="also export rests and raw stroke intervals for plotting")
     run.add_argument("--scoreboard-profile", choices=["pba-team-league"],
                      help="include broadcast scores separately from CV estimates")
+    run.add_argument("--scoreboard-target", type=int, default=15, help="winning score for the broadcast timeline")
 
     args = parser.parse_args(argv)
     try:
@@ -81,6 +84,8 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _run(args) -> int:
+    if args.raw_out and args.raw_out.resolve() == args.out.resolve():
+        raise ValueError("--raw-out must differ from the published --out path")
     terminal = Terminal()
     tournament = terminal.find_tournament(args.season, args.keyword)
     match = terminal.find_match(tournament["tour_code"], args.players)
@@ -106,6 +111,11 @@ def _run(args) -> int:
     print(f"{len(frames)} frames")
 
     reconstruction = reconstruct(frames, args.fps, progress=lambda msg: print(f"  {msg}"))
+    if args.raw_out:
+        args.raw_out.parent.mkdir(parents=True, exist_ok=True)
+        raw = {"schema": "pba-vision/raw-reconstruction@0.1", **asdict(reconstruction)}
+        args.raw_out.write_text(json.dumps(raw, ensure_ascii=False, indent=1), encoding="utf-8")
+        print(f"raw reconstruction: {args.raw_out}")
 
     sheet = parse_set_innings(terminal.set_innings_html(pcgm))
     print(f"official sheet: {sheet.players}, {sheet.inning_count} innings, final {sheet.final_totals()}")
@@ -115,7 +125,7 @@ def _run(args) -> int:
 
     broadcast_scores = None
     if args.scoreboard_profile:
-        broadcast_scores = read_video_scores(video_path, progress=print).to_dict()
+        broadcast_scores = read_video_scores(video_path, target=args.scoreboard_target, progress=print).to_dict()
 
     artifact = write_artifact(
         args.out,

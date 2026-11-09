@@ -48,6 +48,22 @@ def test_locked_calibration_does_not_follow_temporary_edge_occlusions():
     assert label is not None
     assert np.allclose(tracker.calibration(label, SHAPE), OVERHEAD)
     assert np.allclose(tracker.calibration(label, (1080, 1920)), OVERHEAD * 2)
+    assert np.allclose(tracker.calibration(label, SHAPE, occluded), OVERHEAD)
+
+
+def test_shared_camera_pan_preserves_table_position():
+    from pbavision.vision.table import homography, to_meters
+
+    tracker = MainCameraTracker()
+    _feed(tracker, OVERHEAD, 100)
+    tracker.finalize()
+    pan = np.array([25, 10], np.float32)
+    shifted = OVERHEAD + pan
+    label = tracker.label(shifted, SHAPE)
+    assert label is not None
+    before = to_meters(homography(tracker.calibration(label, SHAPE)), 600, 250)
+    after = to_meters(homography(tracker.calibration(label, SHAPE, shifted)), 625, 260)
+    assert np.allclose(before, after, atol=.001)
 
 
 def test_rare_view_is_not_promoted():
@@ -82,3 +98,14 @@ def test_normalized_geometry_independent_of_resolution():
     probe = OVERHEAD + 1.0
     assert tracker_a.accept(probe, SHAPE)
     assert tracker_b.accept(probe * 2.0, (1080, 1920))
+
+
+def test_calibration_uses_the_requested_stable_camera():
+    tracker = MainCameraTracker()
+    _feed(tracker, OVERHEAD, 100)
+    _feed(tracker, WIDE, 60)
+    assert tracker.finalize()["stable_cameras"] == 2
+    overhead, wide = tracker.label(OVERHEAD, SHAPE), tracker.label(WIDE, SHAPE)
+    assert overhead != wide
+    assert np.allclose(tracker.calibration(overhead, SHAPE), OVERHEAD)
+    assert np.allclose(tracker.calibration(wide, SHAPE), WIDE)

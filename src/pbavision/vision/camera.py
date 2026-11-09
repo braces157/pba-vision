@@ -104,10 +104,21 @@ class MainCameraTracker:
                 return index
         return None
 
-    def calibration(self, label: int, frame_shape: tuple[int, int]) -> np.ndarray:
-        """One fixed quad per tripod; temporary edge occlusions cannot move it."""
+    def calibration(
+        self, label: int, frame_shape: tuple[int, int], observed_quad: np.ndarray | None = None,
+    ) -> np.ndarray:
+        """Correct shared camera translation, retaining the lock for edge occlusions."""
         h, w = frame_shape
-        return (self._stable[label].quad * np.array([w, h])).astype(np.float32)
+        locked = (self._stable[label].quad * np.array([w, h])).astype(np.float32)
+        if observed_quad is not None:
+            displacement = observed_quad - locked
+            translation = np.median(displacement, axis=0)
+            # A pan shifts every corner together. A hand on one rail changes
+            # only part of the outline and must not shift the calibration.
+            residual = np.linalg.norm(displacement - translation, axis=1)
+            if float(np.max(residual)) <= 3 * w / 960:
+                return locked + translation
+        return locked
 
     # ---------------------------------------------------------------- private
 

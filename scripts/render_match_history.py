@@ -61,12 +61,13 @@ def clock(seconds: float) -> str:
 
 
 def score_context(history: dict, turn: dict, movement: dict | None) -> str:
-    players = history.get("meta", {}).get("players", [])
+    players = history.get("meta", {}).get("players") or []
     names = " / ".join(players) or "Player order from source"
-    before = "–".join(map(str, turn.get("score_start", []))) or "unavailable"
-    after = "–".join(map(str, turn.get("score_end", []))) or "unavailable"
+    before = "–".join(map(str, turn.get("score_start") or [])) or "unavailable"
+    after = "–".join(map(str, turn.get("score_end") or [])) or "unavailable"
     total = turn.get("points")
-    text = f"Turn score ({names}) {before} → {after}  |  Turn total: {f'+{total}' if total is not None else 'unknown'}"
+    label = "Score tiles at turn bounds" if "observed_points" in turn else "Turn score"
+    text = f"{label} ({names}) {before} → {after}  |  Turn total: {f'+{total}' if total is not None else 'unknown'}"
     if movement is not None:
         points = movement.get("score_points")
         if isinstance(points, int) and not isinstance(points, bool):
@@ -93,6 +94,10 @@ def status_lines(trajectory: dict, paths: dict, has_paths: bool) -> list[str]:
     )
     if completeness.get("end_reason") == "camera_cut":
         details.append("Camera cuts away; the unseen ending is omitted")
+    elif completeness.get("end_reason") == "source_cut":
+        details.append("Video cuts to another moment; the unseen ending is omitted")
+    elif completeness.get("end_reason") == "timeline_mismatch":
+        details.append("Live timeline changes; later frames are omitted")
     elif completeness.get("end_reason") == "interval_end" and end is not True:
         details.append("Video interval ends before the balls settle")
     if any(len(segments) > 1 for segments in paths.values()):
@@ -366,13 +371,14 @@ def write_gallery(index: dict, out: Path) -> None:
              "Each image shows the observed route, starting balls and last visible positions.",
              "Camera cuts and missing observations stay marked. Points are totals for the turn.", "",
              "Score order: " + " / ".join(index["players"]), "",
-             "| Inning | Turn | Player | Turn points | Score after | Images in order |",
+             "| Inning | Turn | Player | Turn points | Score context | Images in order |",
              "| --- | --- | --- | --- | --- | --- |"]
     for turn in index["turns"]:
         links = " · ".join(f"[{number}]({name})" for number, name in enumerate(turn["paths"], 1))
         score = "–".join(map(str, turn.get("score_end") or []))
+        points = turn["points"] if turn["points"] is not None else "unknown"
         lines.append(f"| {turn['inning']} | {turn['turn']} | {turn['player_name']} | "
-                     f"{turn['points']} | {score} | {links} |")
+                     f"{points} | {score or 'unavailable'} | {links} |")
     (out / "README.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 

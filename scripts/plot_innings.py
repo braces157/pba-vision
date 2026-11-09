@@ -37,25 +37,39 @@ def groups(ball_data: dict, counter: dict, score_data: dict) -> list[dict]:
     score_readings = score_data["scoreboard"]["readings"]
     result = []
     for span in spans:
-        rests = [r for r in ball_data["rests"] if span.start <= r["timestamp"] <= span.end and valid_rest(r)]
-        strokes = [s for s in ball_data["strokes"]
-                   if valid_rest(s["from_rest"]) and valid_rest(s["to_rest"])
-                   and inning_for_interval(s["from_rest"]["timestamp"], s["to_rest"]["timestamp"], spans)
-                   == span.inning]
+
+        def supported_time(t: float) -> bool:
+            return any(abs(t - obs_t) <= 1 and inning == span.inning for obs_t, inning in counter["readings"])
+
+        rests = [
+            r
+            for r in ball_data["rests"]
+            if span.start <= r["timestamp"] <= span.end and valid_rest(r) and supported_time(r["timestamp"])
+        ]
+        strokes = [
+            s
+            for s in ball_data["strokes"]
+            if valid_rest(s["from_rest"])
+            and valid_rest(s["to_rest"])
+            and inning_for_interval(s["from_rest"]["timestamp"], s["to_rest"]["timestamp"], spans) == span.inning
+        ]
         # Keep only transitions whose endpoints have nearby matching counter
         # observations. Hidden score bugs and older counters in replays do
         # not supply evidence that a position belongs to the current inning.
         supported = []
         for stroke in strokes:
             endpoints = [stroke[p]["timestamp"] for p in ("from_rest", "to_rest")]
-            if all(any(abs(t - obs_t) <= 1 and n == span.inning for obs_t, n in counter["readings"])
-                   for t in endpoints):
+            if all(supported_time(t) for t in endpoints):
                 supported.append(stroke)
-        result.append({
-            **asdict(span), "rests": rests, "transitions": supported,
-            "score_start": score_at(span.start, score_readings),
-            "score_end": score_at(span.end, score_readings),
-        })
+        result.append(
+            {
+                **asdict(span),
+                "rests": rests,
+                "transitions": supported,
+                "score_start": score_at(span.start, score_readings),
+                "score_end": score_at(span.end, score_readings),
+            }
+        )
     return result
 
 

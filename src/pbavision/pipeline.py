@@ -212,7 +212,7 @@ def reconstruct(
         label = tracker.label(quad, img.shape[:2])
         if label is None:
             continue  # an unstable view: transition graphics, drifting zoom
-        matrix = homography(tracker.calibration(label, img.shape[:2]))
+        matrix = homography(tracker.calibration(label, img.shape[:2], quad))
         if matrix is None:
             continue
         result = analyse_frame(img, params)

@@ -104,6 +104,7 @@ class TeamLeagueReader:
     # Coordinates measured on a 1920 x 1080 broadcast. Exclude the adjacent
     # cue-ball/run counter, inning number, names and team/set scores.
     CELLS = ((417, 885, 465, 930), (417, 933, 465, 978))
+    INNING_CELL = (490, 848, 522, 880)
 
     @staticmethod
     def active_player(frame: np.ndarray) -> int | None:
@@ -176,6 +177,25 @@ class TeamLeagueReader:
                 return None
             scores.append(value)
         return scores[0], scores[1]
+
+    def read_inning(self, frame: np.ndarray) -> int | None:
+        """Read the inning beside SET; active row alone cannot reject old replays."""
+        h, w = frame.shape[:2]
+        if abs(w / h - 16 / 9) > .05:
+            return None
+        x1, y1, x2, y2 = self.INNING_CELL
+        crop = frame[round(y1 * h / 1080):round(y2 * h / 1080),
+                     round(x1 * w / 1920):round(x2 * w / 1920)]
+        if not crop.size:
+            return None
+        result, _ = self.engine(crop, use_det=False, use_cls=False)
+        if not result or len(result) != 1:
+            return None
+        text, confidence = result[0]
+        if confidence < self.min_confidence or not text.isascii() or not text.isdigit():
+            return None
+        value = int(text)
+        return value if 1 <= value <= 99 else None
 
 
 def read_video_scores(video: Path, sample_fps: float = 2.0, target: int = 15, progress=None) -> ScoreTimeline:

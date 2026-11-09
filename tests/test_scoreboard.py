@@ -123,10 +123,25 @@ def test_video_input_rejects_other_hosts():
         youtube_id("https://example.com/watch?v=jBbjq-VjxM4")
 
 
-@pytest.mark.parametrize("final,exit_code", [((5, 14), 2), ((5, 15), 0)])
-def test_scores_command_saves_observations_and_reports_partial_coverage(tmp_path, monkeypatch, final, exit_code):
+def test_inning_identity_requires_a_confident_numeric_reading():
+    reader = object.__new__(TeamLeagueReader)
+    reader.min_confidence = .9
+    frame = np.zeros((1080, 1920, 3), np.uint8)
+    reader.engine = lambda *a, **k: ([["4", .99]], None)
+    assert reader.read_inning(frame) == 4
+    reader.engine = lambda *a, **k: ([["4", .4]], None)
+    assert reader.read_inning(frame) is None
+    reader.engine = lambda *a, **k: ([["SET", .99]], None)
+    assert reader.read_inning(frame) is None
+
+
+@pytest.mark.parametrize("initial,final,exit_code", [((0, 0), (5, 14), 2), ((0, 0), (5, 15), 0),
+                                                    ((2, 3), (5, 15), 2)])
+def test_scores_command_saves_observations_and_reports_partial_coverage(
+    tmp_path, monkeypatch, initial, final, exit_code,
+):
     tracker = ScoreTracker()
-    for t, scores in [(0, (0, 0)), (0.5, (0, 0)), (1, final), (1.5, final)]:
+    for t, scores in [(0, initial), (0.5, initial), (1, final), (1.5, final)]:
         tracker.observe(t, scores)
     monkeypatch.setattr("pbavision.cli.read_video_scores", lambda *a, **kw: tracker.timeline)
     out = tmp_path / "scores.json"

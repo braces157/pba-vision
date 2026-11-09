@@ -33,7 +33,24 @@ def test_turn_points_are_not_movement_points():
     assert "Movement score: +1" in renderer.score_context({}, turn, {"score_points": 1})
 
 
-def test_render_index_includes_every_turn_and_path_card(tmp_path):
+def test_unknown_turn_score_and_lagged_tile_context_can_render():
+    turn = {"points": None, "observed_points": 2, "score_start": None, "score_end": [0, 0]}
+    text = renderer.score_context({}, turn, {})
+    assert "Score tiles at turn bounds" in text
+    assert "Turn total: unknown" in text
+    assert "unavailable" in text
+
+
+def test_render_index_includes_every_turn_and_path_card(tmp_path, monkeypatch):
+    plotted = []
+    original = renderer.plt.Axes.plot
+
+    def capture(ax, *args, **kwargs):
+        if len(args) >= 2 and isinstance(args[0], list):
+            plotted.append((args[0], args[1]))
+        return original(ax, *args, **kwargs)
+
+    monkeypatch.setattr(renderer.plt.Axes, "plot", capture)
     base = {
         "inning": 1,
         "player_name": "A",
@@ -67,6 +84,9 @@ def test_render_index_includes_every_turn_and_path_card(tmp_path):
         "pngs": 2,
     }
     assert index["turns"][0]["movements"][0]["segments"]["yellow"] == 2
+    assert ([.1, 1], [.2, .2]) in plotted
+    assert ([1, .1], [1, 1]) in plotted
+    assert ([.1, 1, 1, .1], [.2, .2, 1, 1]) not in plotted
     assert index["turns"][0]["movements"][0]["completeness"]["end_settled"] is False
     assert all((tmp_path / name).is_file() for turn in index["turns"] for name in turn["paths"])
     assert json.loads((tmp_path / "index.json").read_text())["turns"][1]["turn"] == 2

@@ -86,10 +86,11 @@ def candidates(hsv: np.ndarray, bed_mask: np.ndarray) -> dict[str, list[tuple[fl
 class BallTracker:
     """Associate detections over adjacent frames; never supply predicted output."""
 
-    def __init__(self):
+    def __init__(self, bounds: tuple[tuple[float, float], tuple[float, float]] | None = None):
         self.position: np.ndarray | None = None
         self.velocity = np.zeros(2)
         self.t: float | None = None
+        self.bounds = bounds
 
     def observe(self, found: list[tuple[float, float, float]], t: float) -> tuple[float, float] | None:
         if not found:
@@ -107,10 +108,22 @@ class BallTracker:
             # after an occlusion. Callers reset on a new calibrated view.
             prediction = self.position + self.velocity * min(dt, .1)
             gate = max(22, min(80, 1500 * dt))
-            plausible = [p for p in found if np.linalg.norm(np.array(p[:2]) - prediction) < gate]
+            predictions = [(prediction, self.velocity)]
+            if self.bounds is not None and dt <= .15:
+                reflected, velocity = prediction.copy(), self.velocity.copy()
+                for axis, (lo, hi) in enumerate(zip(*self.bounds)):
+                    lo, hi = lo + 6, hi - 6
+                    if reflected[axis] < lo and velocity[axis] < 0:
+                        reflected[axis], velocity[axis] = 2 * lo - reflected[axis], -velocity[axis]
+                    elif reflected[axis] > hi and velocity[axis] > 0:
+                        reflected[axis], velocity[axis] = 2 * hi - reflected[axis], -velocity[axis]
+                predictions.append((reflected, velocity))
+            associations = [(np.linalg.norm(np.array(p[:2]) - predicted), p, velocity)
+                            for p in found for predicted, velocity in predictions]
+            plausible = [a for a in associations if a[0] < gate]
             if not plausible:
                 return None
-            chosen = min(plausible, key=lambda p: np.linalg.norm(np.array(p[:2]) - prediction) / 15 + .2 * p[2])
+            _, chosen, self.velocity = min(plausible, key=lambda a: a[0] / 15 + .2 * a[1][2])
             observed_velocity = (np.array(chosen[:2]) - self.position) / dt
             self.velocity = .35 * self.velocity + .65 * observed_velocity
         self.position = np.array(chosen[:2])
@@ -149,7 +162,15 @@ def rail_contacts(paths: list[list[list[float]]], ball: str, max_gap: float = 0.
                 is_extremum = sign * point[axis] <= min(sign * p[axis] for p in neighbours) + .0005
                 if is_extremum and incoming < -.04 and outgoing > .04 and min(travel_in, travel_out) >= .008:
                     recent = [c for c in contacts if c["rail"] == rail and abs(c["t"] - t) < .4]
-                    if not recent:
+                    separate = not recent
+                    if recent:
+                        last = recent[-1]
+                        excursion = [abs(p[axis] - bound) for p in segment if last["t"] < p[0] < t]
+                        previous_distance = abs(last["x" if axis == 1 else "y"] - bound)
+                        separate = bool(excursion) and max(excursion) > max(
+                            previous_distance, abs(point[axis] - bound),
+                        ) + .015
+                    if separate:
                         bracketed = any(before[0] <= a < b <= after[0] for a, b in gaps)
                         contacts.append({"ball": ball, "t": t, "x": x, "y": y, "rail": rail,
                                          "evidence": "bracketed_gap" if bracketed else "observed_reversal"})
@@ -158,26 +179,31 @@ def rail_contacts(paths: list[list[list[float]]], ball: str, max_gap: float = 0.
 
 def view_samples(
     video: Path, start: float, end: float, bed_quad: np.ndarray, outer_quad: np.ndarray,
-    owner: int, latest_start: float,
+    owner: int, latest_start: float, inning: int | None = None,
 ):
     """Yield calibrated camera views, preserving every missing source frame.
 
-    Eligibility comes from the live active-player counter. It prevents a
-    replay with a hidden/old counter from creating a new observed strike.
+    A new start requires the active player and bracketing inning readings.
+    Abrupt source edits split views even if their camera quad is unchanged.
     """
     destination = np.array([[0, 0], [BED_WIDTH, 0], [BED_WIDTH, BED_HEIGHT], [0, BED_HEIGHT]], np.float32)
     matrix = cv2.getPerspectiveTransform(bed_quad.astype(np.float32), destination)
     bed_mask = np.zeros((540, 960), np.uint8)
     cv2.fillConvexPoly(bed_mask, bed_quad.astype(np.int32), 1)
     bed_mask = cv2.erode(bed_mask, np.ones((3, 3), np.uint8))
+    identity_reader = TeamLeagueReader() if inning is not None else None
     capture = cv2.VideoCapture(str(video))
     if not capture.isOpened():
         capture.release()
         raise RuntimeError(f"cannot open {video}")
     fps = capture.get(cv2.CAP_PROP_FPS)
-    trackers = {ball: BallTracker() for ball in BALLS}
+    bounds = (tuple(np.min(bed_quad, axis=0)), tuple(np.max(bed_quad, axis=0)))
+    trackers = {ball: BallTracker(bounds) for ball in BALLS}
     samples = []
     last_visible = -math.inf
+    previous_image = None
+    inning_readings = []
+    identity_time = -math.inf
     try:
         first = round(start * fps)
         capture.set(cv2.CAP_PROP_POS_FRAMES, first)
@@ -193,14 +219,26 @@ def view_samples(
             if not same_view:
                 if samples:
                     if t - last_visible > .3:
-                        yield samples, fps, "camera_cut"
+                        yield verify_live_identity(samples, inning_readings, inning), fps, "camera_cut"
                         samples = []
-                        trackers = {ball: BallTracker() for ball in BALLS}
+                        trackers = {ball: BallTracker(bounds) for ball in BALLS}
+                        previous_image = None
+                        inning_readings, identity_time = [], -math.inf
                     else:
                         samples.append({"t": t, "frame": frame_no, "points": {}, "eligible": False})
                 continue
-            last_visible = t
             found = candidates(hsv, bed_mask)
+            previous_points = {ball: tracker.position for ball, tracker in trackers.items()
+                               if tracker.position is not None}
+            if previous_image is not None and source_discontinuity(
+                previous_image, img, bed_mask, previous_points, found,
+            ):
+                yield verify_live_identity(samples, inning_readings, inning), fps, "source_cut"
+                samples = []
+                trackers = {ball: BallTracker(bounds) for ball in BALLS}
+                inning_readings, identity_time = [], -math.inf
+            last_visible = t
+            previous_image = img
             points = {}
             for ball in BALLS:
                 pixel = trackers[ball].observe(found[ball], t)
@@ -209,11 +247,57 @@ def view_samples(
                     if 0 <= xy[0] <= BED_WIDTH and 0 <= xy[1] <= BED_HEIGHT:
                         points[ball] = [float(v) for v in xy]
             eligible = t <= latest_start and TeamLeagueReader.active_player(frame) == owner
+            if identity_reader is not None and t - identity_time >= .49:
+                inning_readings.append((t, identity_reader.read_inning(frame)))
+                identity_time = t
             samples.append({"t": t, "frame": frame_no, "points": points, "eligible": eligible})
         if samples:
-            yield samples, fps, "interval_end"
+            yield verify_live_identity(samples, inning_readings, inning), fps, "interval_end"
     finally:
         capture.release()
+
+
+def verify_live_identity(samples: list[dict], readings: list[tuple[float, int | None]], inning: int | None):
+    """Bracket eligible starts with matching live-innings observations.
+
+    Missing counters prevent a new strike claim but do not cut an active
+    live movement. A confirmed different inning excludes earlier-turn replays.
+    """
+    if inning is None:
+        return samples
+    after = 0
+    for sample in samples:
+        t = sample["t"]
+        while after < len(readings) and readings[after][0] <= t + .0001:
+            after += 1
+        before = readings[after - 1] if after else None
+        following = readings[after] if after < len(readings) else None
+        if following is None and before is not None and abs(before[0] - t) < .0001 and after >= 2:
+            before, following = readings[after - 2], readings[after - 1]
+        adjacent = [r for r in (before, following) if r is not None and abs(r[0] - t) <= .6]
+        mismatch = any(value is not None and value != inning for _, value in adjacent)
+        confirmed = len(adjacent) == 2 and all(value == inning for _, value in adjacent)
+        sample["live_identity"] = False if mismatch else True if confirmed else None
+        sample["eligible"] = sample["eligible"] and confirmed
+    return samples
+
+
+def source_discontinuity(previous, current, bed_mask, previous_points, found) -> bool:
+    """Detect abrupt edits even when both frames use the same camera quad.
+
+    A missing counter alone is not an edit. Use a large image discontinuity
+    or a jump by multiple balls beyond the adjacent-frame association range.
+    Subtle replay edits can still require source review.
+    """
+    changed = np.max(cv2.absdiff(previous, current), axis=2) > 55
+    if float(np.mean(changed[bed_mask > 0])) > .18:
+        return True
+    jumps = 0
+    for ball, point in previous_points.items():
+        strong = [p for p in found[ball] if p[2] < 3]
+        if strong and min(np.linalg.norm(np.array(p[:2]) - point) for p in strong) > 80:
+            jumps += 1
+    return jumps >= 2
 
 
 def trajectory_from_samples(samples: list[dict], fps: float, cue: str, completeness: dict) -> dict:
@@ -227,7 +311,6 @@ def trajectory_from_samples(samples: list[dict], fps: float, cue: str, completen
                 paths[ball].append([])
             paths[ball][-1].append([round(sample["t"] - start, 4), *[round(v, 4) for v in xy]])
             last_frame[ball] = sample["frame"]
-    paths = {ball: [segment for segment in segments if len(segment) >= 2] for ball, segments in paths.items()}
     coverage = sum(len(s) for s in paths[cue]) / len(samples)
     reasons = []
     if not completeness["start_observed"]:
@@ -251,26 +334,44 @@ def trajectory_from_samples(samples: list[dict], fps: float, cue: str, completen
 
 def scan_turn(video: Path, turn: dict, bed_quad: np.ndarray, outer_quad: np.ndarray) -> list[dict]:
     """Discover movements throughout a turn, not just prior resting candidates."""
-    from .episodes import movement_windows
+    from .episodes import movement_windows, resting
 
     movements = []
+    turn["unassigned_movements"] = []
+    owner_rest_time = None
     for samples, fps, end_reason in view_samples(
-        video, turn["start"], turn["end"] + 8, bed_quad, outer_quad, turn["player"], turn["end"],
+        video, turn["start"], turn["end"] + 8, bed_quad, outer_quad, turn["player"], turn["end"], turn["inning"],
     ):
+        if owner_rest_time is None:
+            recent = 0
+            for i, sample in enumerate(samples):
+                while recent < i and samples[recent]["t"] < sample["t"] - .7:
+                    recent += 1
+                if sample["eligible"] and resting(samples[recent:i + 1], sample["t"]):
+                    owner_rest_time = sample["t"]
+                    break
         for window in movement_windows(samples, turn["cue"]):
             selected = samples[window["first"]:window["last"] + 1]
             if selected[0]["t"] > turn["end"] or len(selected) < 6:
                 continue
             completeness = {k: window[k] for k in ("start_observed", "end_settled", "end_reason")}
-            if not completeness["end_settled"]:
+            if not completeness["end_settled"] and completeness["end_reason"] == "camera_cut":
                 completeness["end_reason"] = end_reason
             trajectory = trajectory_from_samples(selected, fps, turn["cue"], completeness)
             if sum(len(s) for s in trajectory["paths"][turn["cue"]]) < 6:
                 continue
-            movements.append({
+            movement = {
                 "start": trajectory["start"], "end": round(selected[-1]["t"], 4),
                 "from": {b: p[0][0][1:] for b, p in trajectory["paths"].items() if p},
                 "to": {b: p[-1][-1][1:] for b, p in trajectory["paths"].items() if p},
                 "trajectory": trajectory,
-            })
+            }
+            known_owner = window.get("rest_before_start") is not None or (
+                owner_rest_time is not None and selected[0]["t"] >= owner_rest_time
+            )
+            if not known_owner:
+                movement["ownership"] = "unconfirmed: movement precedes this player's observed live resting layout"
+                turn["unassigned_movements"].append(movement)
+            else:
+                movements.append(movement)
     return movements

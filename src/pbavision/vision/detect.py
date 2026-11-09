@@ -83,7 +83,7 @@ def detect_balls(
     y1 = min(hsv.shape[0], y + h + params.bbox_margin)
     roi = hsv[y0:y1, x0:x1]
     cloth_contours, _ = cv2.findContours(cloth_mask(hsv), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    cloth_outline = max(cloth_contours, key=cv2.contourArea) if cloth_contours else None
+    cloth_outline = cv2.convexHull(max(cloth_contours, key=cv2.contourArea)) if cloth_contours else None
 
     expected = 130.0  # contour area of a ~13 px ball
     out: dict[str, tuple[float, float]] = {}
@@ -91,9 +91,15 @@ def detect_balls(
         mask = cv2.morphologyEx(_ball_mask(roi, params, colour), cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
         # A white rail can surround the white ball in this mask. External-only
         # contours discard the enclosed ball along with the rail's interior.
-        contours, _ = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         best: tuple[float, float, float] | None = None
-        for contour in contours:
+        for index, contour in enumerate(contours):
+            depth, parent = 0, hierarchy[0, index, 3]
+            while parent >= 0:
+                depth += 1
+                parent = hierarchy[0, parent, 3]
+            if depth % 2:
+                continue  # a hole in a bright region is not a ball component
             area = cv2.contourArea(contour)
             if area < params.min_area or area > params.max_area:
                 continue

@@ -50,6 +50,24 @@ def test_white_decoy_inside_bbox_but_outside_cloth_is_ignored():
     assert np.linalg.norm(np.array(result.balls["white"]) - [x * scale, y * scale]) < 4
 
 
+def test_boundary_connected_notch_does_not_hide_cushion_ball():
+    img = draw_table()
+    x, y = place(img, QUAD_PX, .025, .5)
+    cv2.rectangle(img, (170, int(y - 35)), (int(x + 16), int(y + 35)), (20, 20, 20), -1)
+    draw_ball(img, x, y, "white")
+    result = analyse_frame(img)
+    assert "white" in result.balls
+    scale = pbavision.vision.detect.WORK_WIDTH / img.shape[1]
+    assert np.linalg.norm(np.array(result.balls["white"]) - [x * scale, y * scale]) < 4
+
+
+def test_ball_sized_hole_inside_white_region_is_not_a_white_ball():
+    img = draw_table()
+    cv2.rectangle(img, (500, 290), (600, 390), (255, 255, 255), -1)
+    cv2.circle(img, (550, 340), 9, (200, 140, 60), -1)
+    assert "white" not in analyse_frame(img).balls
+
+
 def test_positions_are_near_truth():
     img = draw_table()
     fx, fy = 0.62, 0.41
