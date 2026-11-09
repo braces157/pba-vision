@@ -1,0 +1,255 @@
+{
+  "source": {
+    "id": "jBbjq-VjxM4",
+    "title": "3세트 하이원리조트(#체네트) vs 하나카드(#Q.응우옌)[웰컴저축은행 #PBA 팀리그 26-27 4R]",
+    "webpage_url": "https://www.youtube.com/watch?v=jBbjq-VjxM4",
+    "uploader": "PBA TV",
+    "upload_date": "20261107",
+    "duration": 1083,
+    "fps": 30.0,
+    "width": 1920,
+    "height": 1080,
+    "source_sha256": "10e54238405a4dbbf52ff88f0b3f0d8c832b900ac11b95d748bcef11db1c2586",
+    "source_bytes": 245263687,
+    "analysis_size": [
+      960,
+      540
+    ],
+    "path_units": "metres on 2.84 x 1.42 playing bed"
+  },
+  "coverage": {
+    "turns": 11,
+    "movements": 24,
+    "with_observed_start": 24,
+    "with_settled_end": 3,
+    "source_review_samples": 72,
+    "final": [
+      5,
+      15
+    ]
+  },
+  "review_method": "Visual inspection of start, one cushion or midpoint, and last visible source frame for every movement; not a frame-by-frame ground-truth audit",
+  "review_times": [
+    {
+      "turn": 1,
+      "movement": 1,
+      "sample_times": [
+        26.4667,
+        28.6334,
+        40.1334
+      ]
+    },
+    {
+      "turn": 2,
+      "movement": 1,
+      "sample_times": [
+        63.0333,
+        69.5666,
+        76.9666
+      ]
+    },
+    {
+      "turn": 3,
+      "movement": 1,
+      "sample_times": [
+        111.9667,
+        115.3667,
+        127.6334
+      ]
+    },
+    {
+      "turn": 4,
+      "movement": 1,
+      "sample_times": [
+        192.9333,
+        194.8333,
+        196.7
+      ]
+    },
+    {
+      "turn": 4,
+      "movement": 2,
+      "sample_times": [
+        228.4333,
+        232.8333,
+        236.7666
+      ]
+    },
+    {
+      "turn": 5,
+      "movement": 1,
+      "sample_times": [
+        267.6667,
+        269.7667,
+        272.4
+      ]
+    },
+    {
+      "turn": 5,
+      "movement": 2,
+      "sample_times": [
+        307.9,
+        309.2,
+        313.3
+      ]
+    },
+    {
+      "turn": 5,
+      "movement": 3,
+      "sample_times": [
+        348.1667,
+        351.2667,
+        357.1667
+      ]
+    },
+    {
+      "turn": 5,
+      "movement": 4,
+      "sample_times": [
+        390.1333,
+        394.7333,
+        400.2666
+      ]
+    },
+    {
+      "turn": 5,
+      "movement": 5,
+      "sample_times": [
+        429.9333,
+        433.0666,
+        439.3
+      ]
+    },
+    {
+      "turn": 5,
+      "movement": 6,
+      "sample_times": [
+        469.2333,
+        470.4666,
+        475.1666
+      ]
+    },
+    {
+      "turn": 5,
+      "movement": 7,
+      "sample_times": [
+        507.7667,
+        509.3334,
+        514.1667
+      ]
+    },
+    {
+      "turn": 5,
+      "movement": 8,
+      "sample_times": [
+        550.8,
+        552.4333,
+        560.7
+      ]
+    },
+    {
+      "turn": 6,
+      "movement": 1,
+      "sample_times": [
+        590.9333,
+        593.2,
+        600.7333
+      ]
+    },
+    {
+      "turn": 6,
+      "movement": 2,
+      "sample_times": [
+        674.4,
+        676.9,
+        683.6333
+      ]
+    },
+    {
+      "turn": 7,
+      "movement": 1,
+      "sample_times": [
+        709.7,
+        712.9333,
+        721.3333
+      ]
+    },
+    {
+      "turn": 8,
+      "movement": 1,
+      "sample_times": [
+        753.0333,
+        756.7666,
+        767.0
+      ]
+    },
+    {
+      "turn": 9,
+      "movement": 1,
+      "sample_times": [
+        798.1667,
+        799.3,
+        807.6334
+      ]
+    },
+    {
+      "turn": 10,
+      "movement": 1,
+      "sample_times": [
+        835.0667,
+        838.6667,
+        846.6334
+      ]
+    },
+    {
+      "turn": 10,
+      "movement": 2,
+      "sample_times": [
+        875.1,
+        876.9,
+        885.7333
+      ]
+    },
+    {
+      "turn": 11,
+      "movement": 1,
+      "sample_times": [
+        921.4,
+        924.8333,
+        933.2333
+      ]
+    },
+    {
+      "turn": 11,
+      "movement": 2,
+      "sample_times": [
+        965.0667,
+        970.0334,
+        976.2334
+      ]
+    },
+    {
+      "turn": 11,
+      "movement": 3,
+      "sample_times": [
+        999.8333,
+        1004.4333,
+        1011.0666
+      ]
+    },
+    {
+      "turn": 11,
+      "movement": 4,
+      "sample_times": [
+        1043.2667,
+        1045.6,
+        1050.2334
+      ]
+    }
+  ],
+  "limitations": [
+    "Only 3 movements have an observed settled ending. Other endings are cut off by the broadcast.",
+    "Individual movement scores remain unassigned; turn totals are verified broadcast observations.",
+    "Calibration and warm-ivory colour profile apply to this video. Other broadcasts require calibration and source review."
+  ]
+}

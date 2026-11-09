@@ -9,6 +9,27 @@ records points per inning only, and the tracking graphics seen on broadcasts
 are produced by the TV production and never leave the truck. This project
 gets the data from the only source that has it — the video itself.
 
+## Match history in v0.3.0
+
+See each player's turn with starting balls, measured travel, direction arrows,
+numbered cushion estimates, and last-visible positions. Scores come from
+the broadcast; a turn total is kept separate from individual movement outcomes.
+
+![Nguyen's white-ball route with five cushion estimates and before/last-visible layouts](docs/images/team-league-s3/turn_07_movement_01.png)
+
+[Browse all 24 images across 11 turns](docs/match-history.md) from
+[Cenet vs Q. Nguyen, set 3](https://www.youtube.com/watch?v=jBbjq-VjxM4),
+which finished **5–15**. The same tracker and renderer produced every image.
+Three movements show a settled ending; the broadcast cuts away before the
+other 21 settle. Missing footage stays blank and each cut ending is labeled.
+
+Generate the image gallery from the bundled observations, without a video download:
+
+```bash
+pip install -e ".[plot]"
+python scripts/render_match_history.py examples/history_team_league_2026_s3_observed.json --out reports/match/images
+```
+
 ```
 broadcast VOD ──▶ frame sampling ──▶ ball detection ──▶ cloth-quad homography
                                                         │ (positions in meters)
@@ -109,6 +130,111 @@ pytest -q        # offline; synthetic frames, no fixtures from broadcasts
 ```
 
 ## Commands
+
+### Read the broadcast score
+
+For a Team League video, install the OCR extra and run `scores`:
+
+```bash
+pip install -e ".[scoreboard]"
+pba-vision scores --video 'https://www.youtube.com/watch?v=jBbjq-VjxM4' \
+  --players Cenet 'Q. Nguyen' --set-number 3 --out data/scores_jBbjq-VjxM4.json
+```
+
+This command reads the cumulative scores from the top and bottom score tiles.
+It samples at 2 fps, requires two matching readings, and ignores backward
+score changes from replays. It accepts a YouTube ID, a URL, or
+`--local-video path/to/video.mp4`. It does not require the official terminal.
+The layout profile supports the 16:9 PBA Team League score bug shown in this
+video. For a set with a different winning score, pass `--target`.
+
+The JSON includes confirmed score changes, timestamps, and the observed
+final score. The [verified example](examples/scores_team_league_2026_s3.json)
+records Cenet 5, Q. Nguyen 15, with 14 score changes checked against video
+frames. Exit code 2 means the opening 0–0 or the winning score was not
+confirmed. The file still contains the available observations. A confirmed
+opening and winning score establish endpoint coverage; they do not prove
+that every intermediate update was visible.
+
+Score changes can lag the shot or cover several shots while the overlay is
+hidden. They do not identify misses, cushion contacts, or the exact stroke
+that earned each point. The reader ignores score decreases, including referee
+corrections; review a video with a scoring correction manually.
+
+To include the same score timeline in a `run` artifact, add
+`--scoreboard-profile pba-team-league`. The `scoreboard` block contains
+broadcast observations. The existing `points_est`, cue, and inning fields
+remain estimates from ball positions.
+For a 9- or 11-point set, also pass `--scoreboard-target 9` or
+`--scoreboard-target 11`; the default is 15.
+
+The older rest-position plotting scripts need raw rest intervals, rather than
+the published reconstruction schema. Add `--raw-out data/balls.json` to
+`pba-vision run` to export `rests`, raw `strokes`, and their timing fields.
+The published `--out` file keeps its existing format.
+
+Prepare counter files from verified broadcast observations in source-video
+seconds. An inning file has `readings: [[time, inning], ...]` and `spans`:
+
+```json
+{
+  "readings": [[0.0, 1], [0.5, 1], [2.0, 2], [2.5, 2]],
+  "spans": [
+    {"inning": 1, "start": 0.0, "end": 0.5},
+    {"inning": 2, "start": 2.0, "end": 2.5}
+  ]
+}
+```
+
+Use `dataclasses.asdict` on `pbavision.align.broadcast.inning_spans(readings)`
+to build the confirmed spans. Keep hidden counters and replay readings out of
+the live observations. Inning plots require matching readings within one
+second of their rest layouts and both transition endpoints.
+Turn-counter files use `readings: [[time, inning, player], ...]`, where player
+0 is the top scoreboard row, and spans from `turn_spans(readings)`. Pass
+verified `--cue-colors` in scoreboard order to `scripts/plot_turns.py`, or
+record them in score metadata as `cue_colors`. Counter gaps leave movement
+ownership unresolved. Score changes can lag a turn boundary; totals remain
+unknown when player-visit ownership or terminal score coverage is ambiguous.
+
+### Render measured trajectories as images
+
+Use a turn-history JSON with verified player turns, cue colours, cumulative
+scores, and calibrated `bed_quad_960px` / `fixed_outer_quad_960px` corners:
+
+```bash
+pip install -e ".[plot,scoreboard]"
+python scripts/trace_history.py history.json --video local-video.mp4 --out reports/match/history.json
+python scripts/render_match_history.py reports/match/history.json --out reports/match/images
+```
+
+The scanner checks every native video frame in each turn. It detects a
+resting layout followed by cue motion, and keeps camera cuts and missing
+detections as gaps. Returning footage with moving balls is labeled as a
+fragment with an unseen start. The warm-ivory white-ball profile is calibrated
+for this Team League broadcast at 960×540; other camera layouts and ball
+colours require calibration and source-video review.
+New movement starts also require the visible active player and matching
+inning OCR on both sides of the start. A missing counter prevents a new start
+claim while allowing an already observed live movement to continue. Abrupt
+same-camera image or layout resets split the observations; subtle edits still
+require source review. Rendering bundled paths only needs the `plot` extra.
+
+The renderer writes a PNG for each observed movement, a card for any turn
+without a path, and an `index.json` covering every turn. Every image uses
+the same geometry, colours, arrows, initial balls, last-visible markers,
+and numbered cushion estimates. Two frames can bracket a cushion estimate
+across a short gap, labeled `bracketed_gap` in JSON; the drawn path still
+remains broken. Cushion estimates do not establish a legal scoring shot.
+Partial `--turn` rescans require a previously completed traced history.
+Full scans omit old outer-table layouts when their conversion is unavailable.
+
+Turn totals come from the broadcast. They are never assigned to an individual
+movement automatically. A movement is not necessarily a whole shot, and
+an automatically tracked path still needs review against its source footage.
+No browser or inline visualization runtime is needed to view the PNGs.
+
+### Reconstruct ball positions
 
 ```bash
 pba-vision videos                      # what the official feed currently offers

@@ -24,7 +24,7 @@ import cv2
 import numpy as np
 
 from .vision.camera import MainCameraTracker
-from .vision.detect import WORK_WIDTH, analyse_frame, cloth_bbox, cloth_mask
+from .vision.detect import WORK_WIDTH, Params, analyse_frame, cloth_bbox, cloth_mask
 from .vision.table import cloth_quad, homography, quad_plausible, to_meters
 
 #: A rest is at least this many analysed frames with all three balls present.
@@ -51,6 +51,8 @@ class RestState:
     frame: int          # first frame index of the run
     timestamp: float    # seconds into the video
     positions: dict[str, tuple[float, float]]
+    end_frame: int | None = None
+    end_timestamp: float | None = None
 
 
 @dataclass
@@ -97,7 +99,8 @@ def _rest_chain(mappings: list[tuple[int, dict[str, tuple[float, float]]]], fps:
                 )
                 for k in BALLS
             }
-            rests.append(RestState(frame=run[0][0], timestamp=run[0][0] / fps, positions=median))
+            rests.append(RestState(frame=run[0][0], timestamp=run[0][0] / fps, positions=median,
+                                   end_frame=run[-1][0], end_timestamp=run[-1][0] / fps))
         run.clear()
 
     for frame, positions in mappings:
@@ -141,7 +144,9 @@ def _next_cue(cue: str | None) -> str | None:
     return None
 
 
-def reconstruct(frames: list, fps: float, progress: Callable[[str], None] | None = None) -> Reconstruction:
+def reconstruct(
+    frames: list, fps: float, progress: Callable[[str], None] | None = None, params: Params | None = None,
+) -> Reconstruction:
     """Run the full reconstruction over a list of frame paths.
 
     Two passes. The survey pass learns the broadcast's stable cameras — a
@@ -207,10 +212,10 @@ def reconstruct(frames: list, fps: float, progress: Callable[[str], None] | None
         label = tracker.label(quad, img.shape[:2])
         if label is None:
             continue  # an unstable view: transition graphics, drifting zoom
-        matrix = homography(quad)
+        matrix = homography(tracker.calibration(label, img.shape[:2], quad))
         if matrix is None:
             continue
-        result = analyse_frame(img)
+        result = analyse_frame(img, params)
         if not result.all_three:
             continue
         out.frames_measured += 1

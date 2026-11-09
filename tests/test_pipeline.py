@@ -38,6 +38,17 @@ def test_empty_move_is_rejected():
         classify(_moved())
 
 
+def test_rest_retains_end_of_settled_run_for_shooter_assignment():
+    from pbavision.pipeline import _rest_chain
+
+    positions = {"white": (1., 1.), "yellow": (2., 1.), "red": (1.5, .5)}
+    rests = _rest_chain([(i, positions) for i in (4, 5, 6, 7)], fps=4)
+    assert len(rests) == 1
+    assert rests[0].timestamp == 1
+    assert rests[0].end_timestamp == 1.75
+    assert rests[0].end_frame == 7
+
+
 def test_inning_chaining_on_synthetic_stream():
     """Rest -> stroke -> rest chain: a miss switches shooter and opens a new inning."""
     from pbavision.pipeline import RestState, _next_cue
